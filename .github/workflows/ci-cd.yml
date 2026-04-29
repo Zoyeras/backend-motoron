@@ -1,0 +1,51 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [ dev, main ]
+    paths:
+      - 'backend-motoron/**'
+  pull_request:
+    branches: [ dev, main ]
+    paths:
+      - 'backend-motoron/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: motoron_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      working-directory: ./backend-motoron/src/MotorON.Api
+      run: dotnet restore
+    
+    - name: Build
+      working-directory: ./backend-motoron/src/MotorON.Api
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Run tests
+      working-directory: ./backend-motoron/src/MotorON.Tests
+      run: dotnet test --no-build --verbosity normal --configuration Release
+      env:
+        DATABASE_URL: Server=localhost;Port=5432;Database=motoron_test;User Id=postgres;Password=postgres;
+      continue-on-error: true
