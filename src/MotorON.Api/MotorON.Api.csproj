@@ -17,4 +17,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MotorON.Application\MotorON.Application.csproj" />
+    <ProjectReference Include="..\MotorON.Infrastructure\MotorON.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

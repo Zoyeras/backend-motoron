@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/MotorON.Api/MotorON.Api.csproj" />
+    <Project Path="src/MotorON.Application/MotorON.Application.csproj" />
+    <Project Path="src/MotorON.Domain/MotorON.Domain.csproj" />
+    <Project Path="src/MotorON.Infrastructure/MotorON.Infrastructure.csproj" />
   </Folder>
 </Solution>
