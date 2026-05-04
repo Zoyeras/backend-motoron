@@ -16,12 +16,33 @@
 - **Lenguaje/Framework:** C# con .NET 10 (ASP.NET Core Web API)
 - **ORM:** Entity Framework Core 10 (Code-First, Migrations)
 - **Base de Datos:** PostgreSQL 16 (Docker, puerto expuesto: `5433`)
-- **Arquitectura:** Controllers → Services → DTOs → Models
+- **Arquitectura:** Full Clean Architecture (4 proyectos)
 - **API escucha en:** `http://localhost:5014`
 - **Connection String:** `Host=localhost;Port=5433;Database=motoron_db;Username=motoron;Password=dev_password_123;`
 
+## Clean Architecture — Estructura de Proyectos
+```
+src/
+├── MotorON.Domain/           → Entidades, interfaces de repositorio (sin dependencias externas)
+├── MotorON.Application/      → DTOs, CQRS (MediatR Commands/Queries/Handlers), interfaces de servicios
+├── MotorON.Infrastructure/   → EF Core DbContext, Repositories, UnitOfWork, JWT, BCrypt
+└── MotorON.Api/              → Controllers (IMediator), Program.cs, middleware
+```
+
+### Dependencias
+- Api → Application, Infrastructure
+- Infrastructure → Application, Domain
+- Application → Domain
+- Domain → (ninguna)
+
+### Patrones
+- **CQRS:** Commands y Queries con MediatR en Application/Features/
+- **Repository + UnitOfWork:** Interfaces en Domain, implementaciones en Infrastructure
+- **Auth:** JWT Bearer + BCrypt. Controllers: AuthController (register, login)
+- **Controllers:** Solo inyectan IMediator, no DbContext
+
 ## Development Process
-- **Pre-Analysis:** Validate `appsettings.Development.json` y `README.md` at the start of the session.
+- **Pre-Analysis:** Validate `appsettings.json` y `README.md` at the start of the session.
 - **Impact Assessment:** Analyze existing code and check impacts on related files before suggesting any change.
 - **Incremental Changes:** For extensive modifications, break the work into small, verifiable steps.
 - **Context Management:** Only analyze files directly related to the current component to conserve tokens.
@@ -33,6 +54,6 @@
 
 ## Frequent Commands Reference
 - Levantar BD: `docker-compose up -d` (desde raíz del monorepo)
-- Migraciones: `dotnet ef database update --project src/MotorON.Api`
+- Migraciones: `dotnet ef database update --project src/MotorON.Infrastructure --startup-project src/MotorON.Api`
 - Correr backend: `dotnet run --project src/MotorON.Api`
-- Nueva migración: `dotnet ef migrations add [NombreMigracion] --project src/MotorON.Api`
+- Nueva migración: `dotnet ef migrations add [Nombre] --project src/MotorON.Infrastructure --startup-project src/MotorON.Api --output-dir Data/Migrations`
