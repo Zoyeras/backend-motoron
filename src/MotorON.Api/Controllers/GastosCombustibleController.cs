@@ -1,8 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MotorON.Api.Data;
-using MotorON.Api.DTOs;
-using MotorON.Api.Models;
+using MotorON.Application.DTOs;
+using MotorON.Application.Features.GastosCombustible.Commands;
+using MotorON.Application.Features.GastosCombustible.Queries;
 
 namespace MotorON.Api.Controllers;
 
@@ -10,80 +10,45 @@ namespace MotorON.Api.Controllers;
 [Route("api/[controller]")]
 public class GastosCombustibleController : ControllerBase
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IMediator _mediator;
 
-    public GastosCombustibleController(AppDbContext dbContext)
+    public GastosCombustibleController(IMediator mediator)
     {
-        _dbContext = dbContext;
+        _mediator = mediator;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GastoCombustible>>> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var items = await _dbContext.GastosCombustible
-            .AsNoTracking()
-            .OrderByDescending(x => x.Fecha)
-            .ToListAsync(cancellationToken);
-
-        return Ok(items);
+        var result = await _mediator.Send(new GetAllGastosCombustibleQuery(), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<GastoCombustible>> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var item = await _dbContext.GastosCombustible.FindAsync([id], cancellationToken);
-        return item is null ? NotFound() : Ok(item);
+        var result = await _mediator.Send(new GetGastoCombustibleByIdQuery(id), cancellationToken);
+        return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<GastoCombustible>> Create([FromBody] GastoCombustibleCreateDto dto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] GastoCombustibleCreateDto dto, CancellationToken cancellationToken)
     {
-        var entity = new GastoCombustible
-        {
-            Fecha = dto.Fecha,
-            Litros = dto.Litros,
-            Costo = dto.Costo,
-            Kilometraje = dto.Kilometraje,
-            CreatedAtUtc = DateTime.UtcNow,
-            UpdatedAtUtc = DateTime.UtcNow
-        };
-
-        _dbContext.GastosCombustible.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
+        var result = await _mediator.Send(new CreateGastoCombustibleCommand(dto), cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] GastoCombustibleUpdateDto dto, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.GastosCombustible.FindAsync([id], cancellationToken);
-        if (entity is null)
-        {
-            return NotFound();
-        }
-
-        entity.Fecha = dto.Fecha;
-        entity.Litros = dto.Litros;
-        entity.Costo = dto.Costo;
-        entity.Kilometraje = dto.Kilometraje;
-        entity.UpdatedAtUtc = DateTime.UtcNow;
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return NoContent();
+        var success = await _mediator.Send(new UpdateGastoCombustibleCommand(id, dto), cancellationToken);
+        return success ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.GastosCombustible.FindAsync([id], cancellationToken);
-        if (entity is null)
-        {
-            return NotFound();
-        }
-
-        _dbContext.GastosCombustible.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return NoContent();
+        var success = await _mediator.Send(new DeleteGastoCombustibleCommand(id), cancellationToken);
+        return success ? NoContent() : NotFound();
     }
 }

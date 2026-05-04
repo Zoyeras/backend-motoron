@@ -1,9 +1,9 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MotorON.Api.Data;
-using MotorON.Api.DTOs;
-using MotorON.Api.Models;
-using MotorON.Api.Services;
+using MotorON.Application.DTOs;
+using MotorON.Application.Features.Mantenimientos.Commands;
+using MotorON.Application.Features.Mantenimientos.Queries;
+using MotorON.Application.Features.OilChange.Queries;
 
 namespace MotorON.Api.Controllers;
 
@@ -11,91 +11,52 @@ namespace MotorON.Api.Controllers;
 [Route("api/[controller]")]
 public class MantenimientosController : ControllerBase
 {
-    private readonly AppDbContext _dbContext;
-    private readonly IOilChangeService _oilChangeService;
+    private readonly IMediator _mediator;
 
-    public MantenimientosController(AppDbContext dbContext, IOilChangeService oilChangeService)
+    public MantenimientosController(IMediator mediator)
     {
-        _dbContext = dbContext;
-        _oilChangeService = oilChangeService;
+        _mediator = mediator;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Mantenimiento>>> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var items = await _dbContext.Mantenimientos
-            .AsNoTracking()
-            .OrderByDescending(x => x.Fecha)
-            .ToListAsync(cancellationToken);
-
-        return Ok(items);
+        var result = await _mediator.Send(new GetAllMantenimientosQuery(), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<Mantenimiento>> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var item = await _dbContext.Mantenimientos.FindAsync([id], cancellationToken);
-        return item is null ? NotFound() : Ok(item);
+        var result = await _mediator.Send(new GetMantenimientoByIdQuery(id), cancellationToken);
+        return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Mantenimiento>> Create([FromBody] MantenimientoCreateDto dto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] MantenimientoCreateDto dto, CancellationToken cancellationToken)
     {
-        var entity = new Mantenimiento
-        {
-            Tipo = dto.Tipo,
-            Kilometraje = dto.Kilometraje,
-            Fecha = dto.Fecha,
-            Costo = dto.Costo,
-            Descripcion = dto.Descripcion,
-            CreatedAtUtc = DateTime.UtcNow,
-            UpdatedAtUtc = DateTime.UtcNow
-        };
-
-        _dbContext.Mantenimientos.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
+        var result = await _mediator.Send(new CreateMantenimientoCommand(dto), cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] MantenimientoUpdateDto dto, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.Mantenimientos.FindAsync([id], cancellationToken);
-        if (entity is null)
-        {
-            return NotFound();
-        }
-
-        entity.Tipo = dto.Tipo;
-        entity.Kilometraje = dto.Kilometraje;
-        entity.Fecha = dto.Fecha;
-        entity.Costo = dto.Costo;
-        entity.Descripcion = dto.Descripcion;
-        entity.UpdatedAtUtc = DateTime.UtcNow;
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return NoContent();
+        var success = await _mediator.Send(new UpdateMantenimientoCommand(id, dto), cancellationToken);
+        return success ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.Mantenimientos.FindAsync([id], cancellationToken);
-        if (entity is null)
-        {
-            return NotFound();
-        }
-
-        _dbContext.Mantenimientos.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return NoContent();
+        var success = await _mediator.Send(new DeleteMantenimientoCommand(id), cancellationToken);
+        return success ? NoContent() : NotFound();
     }
 
     [HttpGet("oil-change-forecast")]
-    public async Task<ActionResult<OilChangeForecastDto>> GetOilChangeForecast(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetOilChangeForecast(CancellationToken cancellationToken)
     {
-        var forecast = await _oilChangeService.CalculateForecastAsync(cancellationToken);
-        return Ok(forecast);
+        var result = await _mediator.Send(new GetOilChangeForecastQuery(), cancellationToken);
+        return Ok(result);
     }
 }

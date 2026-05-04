@@ -1,31 +1,26 @@
-using Microsoft.EntityFrameworkCore;
-using MotorON.Api.Data;
-using MotorON.Api.Services;
+using MotorON.Application;
+using MotorON.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IOilChangeService, OilChangeService>();
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-	?? Environment.GetEnvironmentVariable("DATABASE_URL")
-	?? "Host=localhost;Port=5433;Database=motoron_db;Username=motoron;Password=dev_password_123";
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-	options.UseNpgsql(connectionString));
 
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("AllowFrontend", builder =>
+	options.AddPolicy("AllowFrontend", policy =>
 	{
 		var corsOrigins = (Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS") 
 			?? "http://localhost:3000,http://localhost:5173").Split(",");
         
-		builder
+		policy
 			.WithOrigins(corsOrigins)
 			.AllowAnyMethod()
 			.AllowAnyHeader()
@@ -44,6 +39,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
