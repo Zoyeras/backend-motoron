@@ -25,10 +25,11 @@ public class GetOilChangeForecastHandler : IRequestHandler<GetOilChangeForecastQ
         var lastFuelRecord = fuelRecords.LastOrDefault();
 
         var averageDailyKilometers = 0;
-        if (firstFuelRecord is not null && lastFuelRecord is not null)
+        if (firstFuelRecord is not null && lastFuelRecord is not null
+            && firstFuelRecord.Kilometraje.HasValue && lastFuelRecord.Kilometraje.HasValue)
         {
             var days = (lastFuelRecord.Fecha.Date - firstFuelRecord.Fecha.Date).TotalDays;
-            var kilometersDelta = lastFuelRecord.Kilometraje - firstFuelRecord.Kilometraje;
+            var kilometersDelta = lastFuelRecord.Kilometraje.Value - firstFuelRecord.Kilometraje.Value;
 
             if (days > 0 && kilometersDelta > 0)
             {
@@ -36,7 +37,7 @@ public class GetOilChangeForecastHandler : IRequestHandler<GetOilChangeForecastQ
             }
         }
 
-        var currentMileage = lastFuelRecord?.Kilometraje
+        var currentMileage = (lastFuelRecord?.Kilometraje)
             ?? lastOilChange?.Kilometraje
             ?? 0;
 

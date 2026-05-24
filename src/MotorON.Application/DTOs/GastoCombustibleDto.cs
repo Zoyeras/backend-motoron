@@ -5,14 +5,14 @@ public record GastoCombustibleCreateDto(
     DateTime Fecha,
     decimal Litros,
     decimal Costo,
-    int Kilometraje
+    int? Kilometraje
 );
 
 public record GastoCombustibleUpdateDto(
     DateTime Fecha,
     decimal Litros,
     decimal Costo,
-    int Kilometraje
+    int? Kilometraje
 );
 
 public record GastoCombustibleResponseDto(
@@ -21,7 +21,7 @@ public record GastoCombustibleResponseDto(
     DateTime Fecha,
     decimal Litros,
     decimal Costo,
-    int Kilometraje,
+    int? Kilometraje,
     decimal PrecioPorLitro,
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc
