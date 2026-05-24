@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MotorON.Application.DTOs;
 using MotorON.Application.Features.GastosCombustible.Commands;
@@ -6,6 +7,7 @@ using MotorON.Application.Features.GastosCombustible.Queries;
 
 namespace MotorON.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class GastosCombustibleController : ControllerBase

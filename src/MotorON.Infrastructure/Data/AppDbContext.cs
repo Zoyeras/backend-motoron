@@ -24,7 +24,11 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Brand).HasMaxLength(100).IsRequired();
             entity.Property(x => x.Model).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Placa).HasMaxLength(20);
+            entity.Property(x => x.Color).HasMaxLength(60);
+            entity.Property(x => x.NumeroSerie).HasMaxLength(100);
             entity.HasIndex(x => new { x.Brand, x.Model });
+            entity.HasIndex(x => x.Placa).IsUnique().HasFilter("\"Placa\" IS NOT NULL");
         });
 
         modelBuilder.Entity<Mantenimiento>(entity =>

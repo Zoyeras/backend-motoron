@@ -7,6 +7,10 @@ public class Vehicle
     public string Model { get; set; } = string.Empty;
     public int Year { get; set; }
     public int CurrentMileage { get; set; }
+    public string? Placa { get; set; }
+    public int? Cilindraje { get; set; }
+    public string? Color { get; set; }
+    public string? NumeroSerie { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
